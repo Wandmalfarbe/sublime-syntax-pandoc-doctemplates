@@ -1,0 +1,82 @@
+%YAML 1.2
+---
+# Sublime Text syntax file for the doctemplate language that is used by
+# pandoc as a general templating language.
+#
+# - https://github.com/jgm/doctemplates
+# - https://pandoc.org/chunkedhtml-demo/6.1-template-syntax.html
+name: doctemplates
+file_extensions: [doctemplates]
+scope: source.doctemplates
+
+contexts:
+  main:
+    - include: line_comment
+    - include: escaped_dollar
+
+    # control structure ${...}
+    - match: '\$\{'
+      scope: punctuation.definition.keyword.doctemplates
+      push: control
+    # control structure $...$
+    - match: '\$'
+      scope: punctuation.definition.keyword.doctemplates
+      push: control
+
+  # control structure (either ${...} or $...$)
+  control:
+    # keywords with arguments
+    - match: '(if|elseif|for)\('
+      scope: keyword.control.doctemplates
+      push: control_argument
+
+    # keywords without arguments
+    - match: '(endif|else|endfor|sep)'
+      scope: keyword.control.doctemplates
+
+    # pipes (functions)
+    - match: '(pairs|uppercase|lowercase|length|reverse|first|last|rest|allbutlast|chomp|nowrap|alpha|roman|left|right|center)'
+      scope: variable.function.doctemplates
+
+    # double quoted strings
+    - match: '"[^"]*"'
+      scope: string.quoted.double.doctemplates
+
+    # variable: variable names must begin with a letter and can contain letters, numbers, _, -, and .
+    - match: '[a-zA-Z]([a-zA-Z]|\d|_|-|\.)*'
+      scope: keyword.operator
+
+    # separator: a separator between values of an array may be specified in square brackets, immediately after the variable name or partial
+    - match: '\[.*\]'
+      scope: comment.line.doctemplates
+
+    # end for control structure ${...}
+    - match: '\$'
+      scope: punctuation.definition.keyword.doctemplates
+      pop: true
+    # end for control structure $...$
+    - match: '\}'
+      scope: punctuation.definition.keyword.doctemplates
+      pop: true
+
+  control_argument:
+    - include: control
+    - match: '[^\)]'
+      scope: keyword.operator
+    - match: '\)'
+      scope: keyword.control
+      pop: true
+
+  # comments begin with a '$--' and finish at the end of the line
+  line_comment:
+    - meta_scope: comment.line.doctemplates
+    - match: '\$--'
+      push: line_comment
+    - match: '$' # Line comments end with a newline
+      pop: true
+
+  # comments begin with a '$--' and finish at the end of the line
+  escaped_dollar:
+    - match: '\$\$'
+      scope: constant.character.escape.doctemplates
+      pop: true
